@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#060912">
+<meta name="description" content="Chroma Tilt: a 3D marble tilt puzzle. 1000 colour-matching levels, free to play in your browser.">
+<title>Chroma Tilt</title>
+<link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/",
+    "jss": "./vendor/jss/jss.bundle.js",
+    "jss-preset-default": "./vendor/jss/jss-preset-default.bundle.js"
+  }
+}
+</script>
+</head>
+<body data-theme="midnight">
+
+<!-- 3D stage (fixed, behind every screen) -->
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<main id="ui">
+
+  <!-- INTRO -->
+  <section id="intro" class="screen active" aria-label="Intro">
+    <div class="intro-wordmark" aria-label="Chroma Tilt">
+      <div class="wm-row wm-chroma">
+        <span style="--i:0;--c:#ff5d73">C</span><span style="--i:1;--c:#3ddcff">H</span><span style="--i:2;--c:#ffc83d">R</span><span style="--i:3;--c:#ffffff">O</span><span style="--i:4;--c:#ff5d73">M</span><span style="--i:5;--c:#3ddcff">A</span>
+      </div>
+      <div class="wm-row wm-tilt">
+        <span style="--i:6;--c:#ffffff">T</span><span style="--i:7;--c:#ffffff">I</span><span style="--i:8;--c:#ffffff">L</span><span style="--i:9;--c:#ffffff">T</span>
+      </div>
+      <p class="wm-sub">ROLL · MATCH · SOLVE</p>
+    </div>
+    <p class="tap-hint">Tap to continue</p>
+  </section>
+
+  <!-- MENU -->
+  <section id="menu" class="screen" aria-label="Main menu">
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-between h-100 px-0">
+      <div class="w-100 d-flex justify-content-end">
+        <div class="pill" id="coinPillMenu"><span class="coin"></span><span class="coinsTxt" id="coinsMenu">0</span></div>
+      </div>
+      <div class="menu-title text-center">
+        <div class="wordmark-sm"><span style="color:var(--coral)">CHROMA</span> <span>TILT</span></div>
+        <p class="sub">ROLL · MATCH · SOLVE</p>
+      </div>
+      <div class="menu-stack d-grid gap-3">
+        <button class="btn btn-game primary" id="btnPlay">PLAY</button>
+        <button class="btn btn-game aqua" id="btnLevels">LEVELS</button>
+        <button class="btn btn-game" id="btnStore">STORE</button>
+        <button class="btn btn-game" id="btnTutorial">HOW TO PLAY</button>
+        <button class="btn btn-game" id="btnSound">SOUND: ON</button>
+      </div>
+      <p class="foot text-center">All 1000 levels free · No ads</p>
+    </div>
+  </section>
+
+  <!-- LEVEL SELECT -->
+  <section id="levels" class="screen" aria-label="Levels">
+    <div class="container panel">
+      <div class="topbar">
+        <button class="btn btn-game iconbtn" data-back>← Menu</button>
+        <h2>Levels</h2>
+        <div class="pill"><span class="coin"></span><span class="coinsTxt">0</span></div>
+      </div>
+      <div class="row g-3" id="levelList"></div>
+    </div>
+  </section>
+
+  <!-- STORE -->
+  <section id="store" class="screen" aria-label="Store">
+    <div class="container panel">
+      <div class="topbar">
+        <button class="btn btn-game iconbtn" data-back>← Menu</button>
+        <h2>Store</h2>
+        <div class="pill"><span class="coin"></span><span class="coinsTxt">0</span></div>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8" id="storeList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TUTORIAL -->
+  <section id="tutorial" class="screen" aria-label="How to play">
+    <div class="container panel tutorial-panel">
+      <div class="topbar">
+        <button class="btn btn-game iconbtn" data-back>← Menu</button>
+        <h2>How to play</h2>
+        <span style="width:70px"></span>
+      </div>
+      <div class="glass tut-card text-center">
+        <h3 id="tTitle"></h3>
+        <p id="tText"></p>
+        <div class="dots" id="tDots"></div>
+        <div class="navrow d-flex gap-2 w-100">
+          <button class="btn btn-game" id="tPrev">Previous</button>
+          <button class="btn btn-game primary" id="tNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen" aria-label="Game">
+    <div class="container-fluid h-100 d-flex flex-column justify-content-between px-3 py-2">
+      <div class="hud d-flex justify-content-between align-items-center w-100">
+        <button class="btn btn-game iconbtn" id="btnMenu">☰ Menu</button>
+        <div class="hud-center text-center">
+          <small>LEVEL</small>
+          <b id="gLevel">1</b>
+          <div class="m">Moves <b id="gMoves">0</b> · Par <b id="gPar">0</b></div>
+        </div>
+        <div class="pill"><span class="coin"></span><span class="coinsTxt">0</span></div>
+      </div>
+      <div class="flex-grow-1"></div>
+      <p class="hud-tip text-center">Swipe to tilt · Arrows / WASD on desktop</p>
+      <div class="tools d-flex justify-content-center gap-2 w-100">
+        <button class="btn btn-game" id="btnUndo">↶ Undo</button>
+        <button class="btn btn-game" id="btnHint">💡 Hint <span id="hintCount">0</span></button>
+        <button class="btn btn-game" id="btnRestart">⟲ Reset</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- WIN -->
+<div class="overlay" id="winOv" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="game-modal glass">
+    <h2 id="winTitle">Solved!</h2>
+    <div class="stars" id="winStars"></div>
+    <p id="winText"></p>
+    <div class="earn" id="earnLine"><span class="coin"></span>+5 coins</div>
+    <div class="d-grid gap-2">
+      <button class="btn btn-game primary" id="btnNext">NEXT LEVEL</button>
+      <button class="btn btn-game" id="btnReplay">REPLAY</button>
+      <button class="btn btn-game" id="btnShare">SHARE</button>
+      <button class="btn btn-game" id="btnWinLevels">Level select</button>
+    </div>
+  </div>
+</div>
+
+<div class="game-toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Game logic (classic scripts, run before the module) -->
+<script src="js/engine.js"></script>
+<script src="js/levels.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
